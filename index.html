@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<body>
+
+<!-- load the d3.js library -->
+<!--<script src="//d3js.org/d3.v4.min.js"></script>-->
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 400 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+// set the ranges
+var x = d3.scaleBand()
+          .range([0, width])
+          .padding(0.1);
+
+var y = d3.scaleLinear()
+          .range([height, 0]);
+
+var z = d3.scaleOrdinal()
+    .range(["OrangeRed", "Orange", "DarkOrange", "Gold"]);
+
+var stack = d3.stack();
+// append the svg object to the body of the page
+// append a 'group' element to 'svg'
+// moves the 'group' element to the top left margin
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// get the data
+
+// d3.csv("sales.csv", function(error, data) {
+//  if (error) throw error;
+
+var data = [
+            {ya:29, yb:47, yc:11, yd:46, total:133, db:"MIDAS"},
+            {ya:126, yb:0, yc: 0, yd: 0, total:126, db:"MIDAS II"}
+          ]
+
+ //data.sort(function(a, b) { return b.total - a.total; });
+
+  // Scale the range of the data in the domains
+  x.domain(data.map(function(d) { return d.db; }));
+  y.domain([0, d3.max(data, function(d) { return d.total; })]);
+  z.domain(["ya","yb", "yc", "yd"]);
+
+var heightRatio = d3.max(data, function(d) { return d.total; }) / height;
+
+function coloration(){
+svg.selectAll(".serie")
+    .data(stack.keys(["ya","yb", "yc", "yd"])(data))
+    .enter().append("g")
+      .attr("class", "serie")
+      .attr("fill", "OrangeRed")
+    .selectAll("rect")
+    .data(function(d) { return d; })
+    .enter().append("rect")
+      .attr("x", function(d) { return x(d.data.db); })
+      .attr("y", function(d) { return y(d[1]); })
+      .attr("height", function(d) { return y(d[0]) - y(d[1]); })
+      .attr("width", x.bandwidth());
+
+      //d3.selectAll(texts[0].text("HH"));
+
+      d3.selectAll(".serie")
+      .transition()
+      .duration(4000)
+      .attr("fill", function(d) { return z(d.key); })
+}
+//State,Under 5 Years,5 to 13 Years,14 to 17 Years,18 to 24 Years,25 to 44 Years,45 to 64 Years,65 Years and Over
+
+
+// test
+
+  //append the rectangles for the bar chart
+  svg.selectAll(".bar")
+      .data(data)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("fill", "OrangeRed")
+      .attr("width", x.bandwidth())
+      .attr("x", function(d) { return x(d.db); })
+      .attr("y", height)
+      .attr("height", 0)
+      .transition()
+      .duration(1500)
+      .attr('y',  function(d){return height - d.total/heightRatio;})
+      .attr("height", function(d){return d.total/heightRatio;});
+
+
+  // add the x Axis
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+  // add the y Axis
+  svg.append("g")
+      .call(d3.axisLeft(y));
+
+// });
+setTimeout(coloration, 4000)
+</script>
+</body>
